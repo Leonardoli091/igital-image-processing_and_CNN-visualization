@@ -1,0 +1,52 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment files
+.env
+.env.*
+
+# IDE / editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Office temporary files
+~$*
+
+# Logs and runtime output
+*.log
+server.out.log
+server.err.log
+
+# Model weights / large generated assets
+*.pth
+*.pt
+*.onnx
+*.ckpt
+weights_cache/
+
+# User-uploaded images generated during local demos
+static/examples/user_upload_*
+
+# Test / coverage output
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build output
+build/
+dist/
+*.egg-info/

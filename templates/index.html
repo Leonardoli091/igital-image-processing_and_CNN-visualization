@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>数字图像处理可视化系统</title>
+    <link rel="stylesheet" href="/static/style.css?v={{ asset_version }}" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Digital Image Processing</p>
+          <h1>数字图像处理可视化系统</h1>
+          <p class="subtitle">图片仓库、卷积神经网络特征图、传统图像处理技术分区展示</p>
+        </div>
+        <div id="modelStatus" class="status-pill">模型状态检查中</div>
+      </header>
+
+      <nav class="main-nav" aria-label="主界面切换">
+        <button class="nav-tab active" type="button" data-view="galleryView">图片仓库</button>
+        <button class="nav-tab" type="button" data-view="cnnView">卷积可视化</button>
+        <button class="nav-tab" type="button" data-view="classicalView">图像处理技术</button>
+      </nav>
+
+      <section id="galleryView" class="view active">
+        <section class="gallery-layout">
+          <div class="panel intro-panel">
+            <div class="panel-title">当前图片</div>
+            <p class="panel-copy">选择系统示例图，或者上传自己的图片。卷积可视化和传统处理都会使用这里选中的图片。</p>
+            <div class="current-image-frame">
+              <img id="sourcePreview" alt="当前输入图像" />
+            </div>
+            <div id="currentImageName" class="current-name">未选择图片</div>
+            <label class="upload-button" for="imageUpload">上传本地图片</label>
+            <input id="imageUpload" class="file-input" type="file" accept="image/*" />
+          </div>
+
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <div class="panel-title">示例图片仓库</div>
+                <p class="panel-copy">点击任意图片设为当前输入。</p>
+              </div>
+            </div>
+            <div id="galleryGrid" class="gallery-grid"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="cnnView" class="view">
+        <section class="cnn-layout">
+          <section class="panel cnn-controls-panel">
+            <div class="section-head compact">
+              <div>
+                <div class="panel-title">调控可视化参数</div>
+                <p class="panel-copy">参数放在顶部，下面留出完整宽度展示卷积流程图和特征图结果。</p>
+              </div>
+            </div>
+            <div class="cnn-controls-grid">
+              <label class="control-field" for="cnnImageSelect">
+                <span>操作图片</span>
+                <select id="cnnImageSelect"></select>
+              </label>
+
+              <label class="control-field" for="modelSelect">
+                <span>模型</span>
+                <select id="modelSelect"></select>
+              </label>
+
+              <label class="control-field" for="layerSelect">
+                <span>查看层</span>
+                <select id="layerSelect"></select>
+              </label>
+
+              <label class="control-field" for="channelCount">
+                <span>显示通道数</span>
+                <select id="channelCount">
+                  <option value="8">8</option>
+                  <option value="16" selected>16</option>
+                  <option value="32">32</option>
+                  <option value="64">64</option>
+                  <option value="128">128</option>
+                  <option value="256">256</option>
+                  <option value="512">512</option>
+                </select>
+              </label>
+
+              <label class="control-field" for="tileSize">
+                <span>单张特征图尺寸</span>
+                <select id="tileSize">
+                  <option value="96">96</option>
+                  <option value="128" selected>128</option>
+                  <option value="160">160</option>
+                  <option value="224">224</option>
+                </select>
+              </label>
+
+              <label class="control-field" for="topChannelCount">
+                <span>Top-K 激活通道</span>
+                <select id="topChannelCount">
+                  <option value="3">3</option>
+                  <option value="6" selected>6</option>
+                  <option value="8">8</option>
+                  <option value="10">10</option>
+                  <option value="12">12</option>
+                </select>
+              </label>
+
+              <label class="control-field" for="diagramStyle">
+                <span>流程图样式</span>
+                <select id="diagramStyle">
+                  <option value="scene" selected>分层3D结构图</option>
+                  <option value="blueprint">蓝图结构图</option>
+                </select>
+              </label>
+
+              <button id="runCnn" class="primary-button inline-action" type="button">生成特征图</button>
+            </div>
+
+          </section>
+
+          <section class="panel network-panel full-row">
+            <div class="section-head">
+              <div>
+                <div class="panel-title">ResNet18 / VGG16 卷积流程图</div>
+                <p class="panel-copy">横向展示完整流程。点击蓝色特征图块，会自动切换到对应层并在下方生成通道特征图。</p>
+              </div>
+            </div>
+            <div id="networkDiagram" class="network-diagram"></div>
+          </section>
+
+          <section class="panel result-panel wide-result">
+            <div class="result-header">
+              <div>
+                <div id="cnnResultTitle" class="panel-title">特征图结果</div>
+                <p id="cnnResultMeta" class="panel-copy">选择模型和层后生成。</p>
+              </div>
+              <a id="downloadCnnLink" class="secondary-button hidden" href="#" download="cnn_feature_maps.png">下载</a>
+            </div>
+            <div id="cnnLoading" class="loading hidden">处理中</div>
+            <div class="cnn-results-grid">
+              <div class="result-card">
+                <div class="result-card-title">通道特征图</div>
+                <div class="result-box">
+                  <img id="cnnResultImage" alt="CNN 特征图结果" />
+                </div>
+              </div>
+              <div class="result-card">
+                <div class="result-card-title">通道平均特征图</div>
+                <p class="panel-copy">所有通道在同一位置求平均。</p>
+                <div class="result-box summary-box">
+                  <img id="meanFeatureImage" alt="通道平均特征图" />
+                </div>
+              </div>
+              <div class="result-card">
+                <div class="result-card-title">最大通道特征图</div>
+                <p class="panel-copy">选择平均响应最高的单个通道。</p>
+                <div class="result-box summary-box">
+                  <img id="maxFeatureImage" alt="最大通道特征图" />
+                </div>
+              </div>
+              <div class="result-card">
+                <div class="result-card-title">Grad-CAM 热力图</div>
+                <p id="gradCamMeta" class="panel-copy">生成特征图时同步生成。</p>
+                <div class="result-box heatmap-box">
+                  <img id="gradCamImage" alt="Grad-CAM 热力图" />
+                </div>
+              </div>
+            </div>
+            <div class="top-channel-section">
+              <div class="result-card-title">Top-K 激活通道</div>
+              <div id="topChannelGrid" class="top-channel-grid"></div>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="classicalView" class="view">
+        <section class="tool-layout classical-layout">
+          <aside class="panel tool-panel">
+            <div class="panel-title">图像处理技术</div>
+            <label class="field-label" for="operationSelect">处理方法</label>
+            <select id="operationSelect"></select>
+            <div class="operation-principle">
+              <div id="operationPrincipleTitle" class="operation-principle-title">技术原理</div>
+              <p id="operationPrincipleText">选择处理方法后显示该技术的基本原理。</p>
+              <ul id="operationPrinciplePoints" class="operation-principle-points"></ul>
+            </div>
+            <button id="runClassical" class="primary-button" type="button">生成处理结果</button>
+
+            <div class="resize-panel">
+              <div class="panel-title small-title">放缩 / 压缩技术</div>
+              <label class="field-label" for="resizeMethodSelect">放缩方法</label>
+              <select id="resizeMethodSelect">
+                <option value="linear">线性插值</option>
+                <option value="pca">主成分分析 PCA</option>
+                <option value="factor">因子分析低秩近似</option>
+              </select>
+
+              <label class="field-label" for="resizeScaleInput">尺寸比例（%）</label>
+              <input id="resizeScaleInput" type="number" min="10" max="400" step="5" value="100" list="resizeScaleOptions" />
+              <datalist id="resizeScaleOptions">
+                <option value="25" label="缩小到 25%"></option>
+                <option value="50" label="缩小到 50%"></option>
+                <option value="75" label="缩小到 75%"></option>
+                <option value="100" label="保持 100%"></option>
+                <option value="150" label="放大到 150%"></option>
+                <option value="200" label="放大到 200%"></option>
+                <option value="300" label="放大到 300%"></option>
+              </datalist>
+
+              <div class="resize-dimension-grid">
+                <label class="field-label" for="targetWidthInput">
+                  输出宽度
+                  <input id="targetWidthInput" type="number" min="1" max="2048" step="1" placeholder="自动" />
+                </label>
+                <label class="field-label" for="targetHeightInput">
+                  输出高度
+                  <input id="targetHeightInput" type="number" min="1" max="2048" step="1" placeholder="自动" />
+                </label>
+              </div>
+
+              <label class="field-label" for="targetSizeInput">目标文件大小（KB）</label>
+              <input id="targetSizeInput" type="number" min="5" max="4096" step="1" placeholder="不限制" list="targetSizeOptions" />
+              <datalist id="targetSizeOptions">
+                <option value="30" label="约 30 KB"></option>
+                <option value="60" label="约 60 KB"></option>
+                <option value="100" label="约 100 KB"></option>
+                <option value="200" label="约 200 KB"></option>
+                <option value="500" label="约 500 KB"></option>
+                <option value="1024" label="约 1 MB"></option>
+              </datalist>
+
+              <button id="runResizeCompress" class="secondary-button full-button" type="button">生成放缩 / 压缩结果</button>
+              <p id="resizeInfoText" class="resize-info">生成后显示输入尺寸、输出尺寸和文件大小。</p>
+            </div>
+
+            <div id="kernelPanel" class="kernel-panel hidden">
+              <div class="panel-title">卷积核</div>
+              <div id="kernelGrid" class="kernel-grid"></div>
+            </div>
+          </aside>
+
+          <section class="panel result-panel wide-result">
+            <div class="result-header">
+              <div>
+                <div id="classicalResultTitle" class="panel-title">处理结果</div>
+                <p id="classicalResultMeta" class="panel-copy">选择处理方法后生成。</p>
+              </div>
+              <a id="downloadClassicalLink" class="secondary-button hidden" href="#" download="classical_result.png">下载</a>
+            </div>
+            <div id="classicalLoading" class="loading hidden">处理中</div>
+            <div class="classical-compare-grid">
+              <div class="result-card">
+                <div class="result-card-title">原图</div>
+                <p id="classicalSourceMeta" class="image-size-meta">生成后显示尺寸和大小。</p>
+                <div class="result-box classical-box">
+                  <img id="classicalSourceImage" alt="原始输入图像" />
+                </div>
+              </div>
+              <div class="result-card">
+                <div class="result-card-title">处理后</div>
+                <p id="classicalResultSizeMeta" class="image-size-meta">生成后显示尺寸和大小。</p>
+                <div class="result-box classical-box">
+                  <img id="classicalResultImage" alt="传统图像处理结果" />
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/main.js?v={{ asset_version }}"></script>
+  </body>
+</html>
